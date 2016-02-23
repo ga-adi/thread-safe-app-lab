@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -45,21 +46,8 @@ public class MainActivity extends AppCompatActivity{
       Uri selectedImage = data.getData();
       image.setImageURI(selectedImage);
 
-      //saves a new picture to a file
-      Bitmap bitmap = null;
-      try {
-        bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(selectedImage));
-      } catch (FileNotFoundException e) {
-        Log.d(TAG, "Image uri is not received or recognized");
-      }
-      try {
-        PictureUtil.saveToCacheFile(bitmap);
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-
-      //provides a feedback that the image is set as a profile picture
-      Toast.makeText(this, "The image is set as a profile picture", Toast.LENGTH_LONG).show();
+      SaveImageInBackground thread = new SaveImageInBackground();
+      thread.execute(selectedImage);
     }
   }
 
@@ -80,5 +68,40 @@ public class MainActivity extends AppCompatActivity{
     intent.setType("image/*");
     intent.setAction(Intent.ACTION_GET_CONTENT);
     startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
+  }
+
+  private class SaveImageInBackground extends AsyncTask<Uri, Void, Boolean> {
+
+    @Override
+    protected Boolean doInBackground(Uri... params) {
+      //saves a new picture to a file
+      Bitmap bitmap = null;
+      try {
+        bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(params[0]));
+      } catch (FileNotFoundException e) {
+        Log.d(TAG, "Image uri is not received or recognized");
+      }
+      try {
+        PictureUtil.saveToCacheFile(bitmap);
+        return true;
+      } catch (IOException e) {
+        e.printStackTrace();
+        return false;
+      }
+    }
+
+    @Override
+    protected void onPostExecute(Boolean aVoid) {
+      super.onPostExecute(aVoid);
+
+      //provides a feedback that the image is set as a profile picture
+      String msg;
+      if (aVoid) {
+        msg = "The image is set as a profile picture";
+      } else {
+        msg = "The image was NOT set as a profile picture - error saving picture";
+      }
+      Toast.makeText(MainActivity.this, msg, Toast.LENGTH_LONG).show();
+    }
   }
 }
