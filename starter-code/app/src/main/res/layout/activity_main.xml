@@ -23,4 +23,11 @@
         android:text="@string/choose"
         android:layout_below="@+id/image"/>
 
+    <ImageView
+        android:id="@+id/previousImage"
+        android:layout_height="80dp"
+        android:layout_width="80dp"
+        android:layout_below="@id/choose_button"
+        android:contentDescription="this was your previous profile image"/>
+
 </RelativeLayout>
