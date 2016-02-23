@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -18,8 +19,9 @@ import java.io.IOException;
 public class MainActivity extends AppCompatActivity{
   private static final String TAG = "makeappthreadsafe";
   private static final int PICK_IMAGE_REQUEST = 1;
-  private ImageView image;
+  private ImageView image, previousImage;
   private Button change;
+  private Uri selectedImage;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -28,6 +30,7 @@ public class MainActivity extends AppCompatActivity{
 
     change = (Button) findViewById(R.id.choose_button);
     image = (ImageView) findViewById(R.id.image);
+    previousImage = (ImageView) findViewById(R.id.previousImage);
     setProfileImage();
     change.setOnClickListener(new View.OnClickListener() {
       @Override
@@ -42,24 +45,17 @@ public class MainActivity extends AppCompatActivity{
   public void onActivityResult(int requestCode, int resultCode, Intent data) {
     super.onActivityResult(requestCode, resultCode, data);
     if (requestCode == PICK_IMAGE_REQUEST && resultCode == MainActivity.RESULT_OK && null != data) {
-      Uri selectedImage = data.getData();
+
+      //Save previous image to another thumbnail
+      previousImage.setImageDrawable(image.getDrawable());
+
+      //pull new image data and set imageView with new image
+      selectedImage = data.getData();
       image.setImageURI(selectedImage);
 
-      //saves a new picture to a file
-      Bitmap bitmap = null;
-      try {
-        bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(selectedImage));
-      } catch (FileNotFoundException e) {
-        Log.d(TAG, "Image uri is not received or recognized");
-      }
-      try {
-        PictureUtil.saveToCacheFile(bitmap);
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-
-      //provides a feedback that the image is set as a profile picture
-      Toast.makeText(this, "The image is set as a profile picture", Toast.LENGTH_LONG).show();
+      //start AsyncTask to save image
+      Task task = new Task();
+      task.execute();
     }
   }
 
@@ -80,5 +76,32 @@ public class MainActivity extends AppCompatActivity{
     intent.setType("image/*");
     intent.setAction(Intent.ACTION_GET_CONTENT);
     startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
+  }
+
+  private class Task extends AsyncTask<Void,Void,Void>{
+
+    @Override
+    protected Void doInBackground(Void... voids) {
+      //saves a new picture to a file
+      Bitmap bitmap = null;
+      try {
+        bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(selectedImage));
+      } catch (FileNotFoundException e) {
+        Log.d(TAG, "Image uri is not received or recognized");
+      }
+      try {
+        PictureUtil.saveToCacheFile(bitmap);
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+      return null;
+    }
+
+    @Override
+    protected void onPostExecute(Void aVoid) {
+      super.onPostExecute(aVoid);
+      //provides feedback that the image is set as a profile picture
+      Toast.makeText(MainActivity.this, "The image is set as a profile picture", Toast.LENGTH_LONG).show();
+    }
   }
 }
