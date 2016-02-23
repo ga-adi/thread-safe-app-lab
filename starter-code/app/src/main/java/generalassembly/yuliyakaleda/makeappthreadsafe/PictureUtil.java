@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Environment;
 import android.util.Log;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -52,7 +53,11 @@ public class PictureUtil {
 
   public static void saveToFile(String filename, Bitmap bmp)
       throws IOException {
+
+
+
       FileOutputStream out = new FileOutputStream(filename);
+    Log.d("PictureUtil","file stream to "+filename);
       bmp.compress(Bitmap.CompressFormat.PNG, 100, out);
       out.flush();
       out.close();
