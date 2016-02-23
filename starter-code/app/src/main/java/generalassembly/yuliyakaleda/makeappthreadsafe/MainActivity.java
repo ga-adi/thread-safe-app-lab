@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -45,7 +46,48 @@ public class MainActivity extends AppCompatActivity{
       Uri selectedImage = data.getData();
       image.setImageURI(selectedImage);
 
-      //saves a new picture to a file
+      // pass selected image to async task
+      ImageAsyncTask imageAsyncTask = new ImageAsyncTask();
+      imageAsyncTask.execute(selectedImage);
+
+
+
+      //provides a feedback that the image is set as a profile picture
+    }
+  }
+
+  //sets the image view of the profile picture to the previously saved image or the placeholder if
+  // the image has never been modified
+  private void setProfileImage() {
+    Bitmap bm = PictureUtil.loadFromCacheFile();
+    Log.d(TAG, "setProfileImage() returned: " + "Image Called");
+    if (bm != null) {
+      Log.i(TAG, "notnull");
+      image.setImageBitmap(bm);
+    } else {
+      Log.i(TAG, "null");
+      image.setImageResource(R.drawable.placeholder);
+    }
+  }
+
+  // brings up the photo gallery/other resources to choose a picture
+  private void changeProfileImage() {
+    Intent intent = new Intent();
+    intent.setType("image/*");
+    intent.setAction(Intent.ACTION_GET_CONTENT);
+    startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
+  }
+
+  private class ImageAsyncTask extends AsyncTask<Uri,Void,Void>{
+
+    @Override
+    protected void onPreExecute() {
+      super.onPreExecute();
+    }
+
+    @Override
+    protected Void doInBackground(Uri... params) {
+      Uri selectedImage = params[0];
       Bitmap bitmap = null;
       try {
         bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(selectedImage));
@@ -57,28 +99,18 @@ public class MainActivity extends AppCompatActivity{
       } catch (IOException e) {
         e.printStackTrace();
       }
-
-      //provides a feedback that the image is set as a profile picture
-      Toast.makeText(this, "The image is set as a profile picture", Toast.LENGTH_LONG).show();
+      return null;
     }
-  }
 
-  //sets the image view of the profile picture to the previously saved image or the placeholder if
-  // the image has never been modified
-  private void setProfileImage() {
-    Bitmap bm = PictureUtil.loadFromCacheFile();
-    if (bm != null) {
-      image.setImageBitmap(bm);
-    } else {
-      image.setImageResource(R.drawable.placeholder);
+    @Override
+    protected void onPostExecute(Void aVoid) {
+      Toast.makeText(MainActivity.this, "The image is set as a profile picture", Toast.LENGTH_LONG).show();
+      super.onPostExecute(aVoid);
     }
-  }
 
-  // brings up the photo gallery/other resources to choose a picture
-  private void changeProfileImage() {
-    Intent intent = new Intent();
-    intent.setType("image/*");
-    intent.setAction(Intent.ACTION_GET_CONTENT);
-    startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
+    @Override
+    protected void onProgressUpdate(Void... values) {
+      super.onProgressUpdate(values);
+    }
   }
 }
