@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -20,6 +21,8 @@ public class MainActivity extends AppCompatActivity{
   private static final int PICK_IMAGE_REQUEST = 1;
   private ImageView image;
   private Button change;
+  Uri selectedImage;
+
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -42,9 +45,18 @@ public class MainActivity extends AppCompatActivity{
   public void onActivityResult(int requestCode, int resultCode, Intent data) {
     super.onActivityResult(requestCode, resultCode, data);
     if (requestCode == PICK_IMAGE_REQUEST && resultCode == MainActivity.RESULT_OK && null != data) {
-      Uri selectedImage = data.getData();
+      selectedImage = data.getData();
       image.setImageURI(selectedImage);
 
+      PictureTask pictureTask = new PictureTask();
+      pictureTask.execute();
+
+    }
+  }
+
+  private class PictureTask extends AsyncTask<Void,Void,Void>{
+    @Override
+    protected Void doInBackground(Void... params) {
       //saves a new picture to a file
       Bitmap bitmap = null;
       try {
@@ -57,9 +69,14 @@ public class MainActivity extends AppCompatActivity{
       } catch (IOException e) {
         e.printStackTrace();
       }
+      return null;
+    }
 
+    @Override
+    protected void onPostExecute(Void aVoid) {
       //provides a feedback that the image is set as a profile picture
-      Toast.makeText(this, "The image is set as a profile picture", Toast.LENGTH_LONG).show();
+      Toast.makeText(MainActivity.this, "The image is set as a profile picture", Toast.LENGTH_LONG).show();
+      super.onPostExecute(aVoid);
     }
   }
 
