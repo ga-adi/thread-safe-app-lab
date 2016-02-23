@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -28,7 +29,10 @@ public class MainActivity extends AppCompatActivity{
 
     change = (Button) findViewById(R.id.choose_button);
     image = (ImageView) findViewById(R.id.image);
+
     setProfileImage();
+    setThumbnail();
+
     change.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
@@ -45,21 +49,10 @@ public class MainActivity extends AppCompatActivity{
       Uri selectedImage = data.getData();
       image.setImageURI(selectedImage);
 
-      //saves a new picture to a file
-      Bitmap bitmap = null;
-      try {
-        bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(selectedImage));
-      } catch (FileNotFoundException e) {
-        Log.d(TAG, "Image uri is not received or recognized");
-      }
-      try {
-        PictureUtil.saveToCacheFile(bitmap);
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
+      SavingPicAsyncTask task = new SavingPicAsyncTask();
+      task.execute(selectedImage);
 
-      //provides a feedback that the image is set as a profile picture
-      Toast.makeText(this, "The image is set as a profile picture", Toast.LENGTH_LONG).show();
+      Toast.makeText(MainActivity.this, "The image is set as a profile picture", Toast.LENGTH_LONG).show();
     }
   }
 
@@ -81,4 +74,41 @@ public class MainActivity extends AppCompatActivity{
     intent.setAction(Intent.ACTION_GET_CONTENT);
     startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
   }
+
+
+  private class SavingPicAsyncTask extends AsyncTask<Uri, Void, Void>{
+    @Override
+    protected Void doInBackground(Uri... params) {
+      //saves a new picture to a file
+      Bitmap bitmap = null;
+      try {
+        bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(params[0]));
+      } catch (FileNotFoundException e) {
+        Log.d(TAG, "Image uri is not received or recognized");
+      }
+      try {
+        PictureUtil.saveToCacheFile(bitmap);
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+      //publishProgress();
+      return null;
+    }
+
+    @Override
+    protected void onPostExecute(Void aVoid) {
+      super.onPostExecute(aVoid);
+      Toast.makeText(MainActivity.this, "Picture saved", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    protected void onProgressUpdate(Void... values) {
+      super.onProgressUpdate(values);
+    }
+  }
+
+  public void setThumbnail(){
+
+  }
+
 }
