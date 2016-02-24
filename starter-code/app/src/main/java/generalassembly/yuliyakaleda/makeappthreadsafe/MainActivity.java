@@ -47,24 +47,9 @@ public class MainActivity extends AppCompatActivity{
       mSelectedImage = data.getData();
       image.setImageURI(mSelectedImage);
 
-      SleeperAsyncTask task = new SleeperAsyncTask();
+      SaveImageAsyncTask task = new SaveImageAsyncTask();
       task.execute();
 
-//      //saves a new picture to a file
-//      Bitmap bitmap = null;
-//      try {
-//        bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(mSelectedImage));
-//      } catch (FileNotFoundException e) {
-//        Log.d(TAG, "Image uri is not received or recognized");
-//      }
-//      try {
-//        PictureUtil.saveToCacheFile(bitmap);
-//      } catch (IOException e) {
-//        e.printStackTrace();
-//      }
-//
-//      //provides a feedback that the image is set as a profile picture
-//      Toast.makeText(this, "The image is set as a profile picture", Toast.LENGTH_LONG).show();
     }
   }
 
@@ -79,7 +64,7 @@ public class MainActivity extends AppCompatActivity{
     }
   }
 
-  private class SleeperAsyncTask extends AsyncTask<Void, Void, Void> {
+  private class SaveImageAsyncTask extends AsyncTask<Void, Void, Void> {
 
     @Override
     protected Void doInBackground(Void... params) {
@@ -102,22 +87,11 @@ public class MainActivity extends AppCompatActivity{
     }
 
     @Override
-    protected void onPreExecute() {
-      super.onPreExecute();
-
-    }
-
-    @Override
     protected void onPostExecute(Void aVoid) {
 //provides a feedback that the image is set as a profile picture
       Toast.makeText(MainActivity.this, "The image is set as a profile picture", Toast.LENGTH_LONG).show();
       super.onPostExecute(aVoid);
 
-    }
-
-    @Override
-    protected void onProgressUpdate(Void... values) {
-      super.onProgressUpdate(values);
     }
   }
 
